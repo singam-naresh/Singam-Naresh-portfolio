@@ -1,0 +1,48 @@
+/* ----------------------------- */
+/* PERFECT LIGHT MODE FIX        */
+/* ----------------------------- */
+
+:root[data-theme="light"] {
+  --background: #f7f9fc;
+  --surface: #ffffff;
+  --card-bg: #ffffff;
+  --card-border: rgba(0,0,0,0.08);
+  --text-primary: #0b0c0e;
+  --text-secondary: #444;
+  --nav-bg: #ffffff;
+  --button-bg: #1a73e8;
+  --button-text: #ffffff;
+}
+
+/* Card fix: remove blur in light mode */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .glass-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+/* Page background fix */
+:root[data-theme="light"] body {
+  background: var(--background);
+}
+
+/* Navbar fix */
+:root[data-theme="light"] .navbar {
+  background: var(--nav-bg);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* Hero section fix */
+:root[data-theme="light"] .hero-container {
+  background: var(--surface);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Remove gradient washout in light mode */
+:root[data-theme="light"] .hero-gradient,
+:root[data-theme="light"] .section-gradient {
+  opacity: 0.4;
+  filter: saturate(0.7);
+}
