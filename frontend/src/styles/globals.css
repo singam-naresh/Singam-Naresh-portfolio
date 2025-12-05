@@ -718,4 +718,48 @@ textarea.input {
 .modal-btn {
   width: 100%;
 }
+ /* 📱 PHONE INPUT + COUNTRY CODE */
+.phone-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.phone-code {
+  min-width: 180px;
+  padding: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #0d0d0d;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.phone-input {
+  flex: 1;
+  padding: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #0d0d0d;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.phone-input:focus,
+.phone-code:focus {
+  outline: none;
+  border-color: #4c6ef5;
+}
+
+/* 🌞 Light mode support */
+:root[data-theme="light"] .phone-code,
+:root[data-theme="light"] .phone-input {
+  background: #f3f4f6;
+  color: #111;
+  border: 1px solid #d1d5db;
+}
+
+:root[data-theme="light"] .phone-input:focus,
+:root[data-theme="light"] .phone-code:focus {
+  border-color: #2563eb;
+}
 

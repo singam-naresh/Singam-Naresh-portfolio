@@ -1,5 +1,67 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
+
+// 🌍 Country code list (most major countries)
+const COUNTRY_CODES = [
+  { code: "+91", label: "🇮🇳 India" },
+  { code: "+1", label: "🇺🇸 United States / Canada" },
+  { code: "+44", label: "🇬🇧 United Kingdom" },
+  { code: "+61", label: "🇦🇺 Australia" },
+  { code: "+64", label: "🇳🇿 New Zealand" },
+  { code: "+81", label: "🇯🇵 Japan" },
+  { code: "+82", label: "🇰🇷 South Korea" },
+  { code: "+86", label: "🇨🇳 China" },
+  { code: "+65", label: "🇸🇬 Singapore" },
+  { code: "+60", label: "🇲🇾 Malaysia" },
+  { code: "+62", label: "🇮🇩 Indonesia" },
+  { code: "+63", label: "🇵🇭 Philippines" },
+  { code: "+94", label: "🇱🇰 Sri Lanka" },
+  { code: "+880", label: "🇧🇩 Bangladesh" },
+  { code: "+92", label: "🇵🇰 Pakistan" },
+  { code: "+971", label: "🇦🇪 United Arab Emirates" },
+  { code: "+966", label: "🇸🇦 Saudi Arabia" },
+  { code: "+974", label: "🇶🇦 Qatar" },
+  { code: "+968", label: "🇴🇲 Oman" },
+  { code: "+973", label: "🇧🇭 Bahrain" },
+  { code: "+20", label: "🇪🇬 Egypt" },
+  { code: "+27", label: "🇿🇦 South Africa" },
+  { code: "+212", label: "🇲🇦 Morocco" },
+  { code: "+234", label: "🇳🇬 Nigeria" },
+
+  { code: "+33", label: "🇫🇷 France" },
+  { code: "+49", label: "🇩🇪 Germany" },
+  { code: "+39", label: "🇮🇹 Italy" },
+  { code: "+34", label: "🇪🇸 Spain" },
+  { code: "+31", label: "🇳🇱 Netherlands" },
+  { code: "+32", label: "🇧🇪 Belgium" },
+  { code: "+41", label: "🇨🇭 Switzerland" },
+  { code: "+43", label: "🇦🇹 Austria" },
+  { code: "+46", label: "🇸🇪 Sweden" },
+  { code: "+47", label: "🇳🇴 Norway" },
+  { code: "+45", label: "🇩🇰 Denmark" },
+  { code: "+48", label: "🇵🇱 Poland" },
+  { code: "+420", label: "🇨🇿 Czech Republic" },
+  { code: "+36", label: "🇭🇺 Hungary" },
+  { code: "+30", label: "🇬🇷 Greece" },
+  { code: "+351", label: "🇵🇹 Portugal" },
+  { code: "+353", label: "🇮🇪 Ireland" },
+
+  { code: "+52", label: "🇲🇽 Mexico" },
+  { code: "+55", label: "🇧🇷 Brazil" },
+  { code: "+54", label: "🇦🇷 Argentina" },
+  { code: "+57", label: "🇨🇴 Colombia" },
+  { code: "+56", label: "🇨🇱 Chile" },
+  { code: "+51", label: "🇵🇪 Peru" },
+  { code: "+593", label: "🇪🇨 Ecuador" },
+  { code: "+58", label: "🇻🇪 Venezuela" },
+
+  { code: "+7", label: "🇷🇺 Russia / Kazakhstan" },
+  { code: "+90", label: "🇹🇷 Türkiye" },
+  { code: "+98", label: "🇮🇷 Iran" },
+
+  // fallback / generic
+  { code: "+000", label: "🌐 Other / Not listed" },
+];
 
 export default function Contact() {
   const [name, setName] = useState("");
@@ -7,57 +69,27 @@ export default function Contact() {
 
   const [countryCode, setCountryCode] = useState("+91");
   const [phone, setPhone] = useState("");
-  const [phoneError, setPhoneError] = useState(false);
 
   const [message, setMessage] = useState("");
 
-  const [status, setStatus] = useState("idle");
+  const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [modal, setModal] = useState({
     open: false,
     type: "success",
     text: "",
   });
 
-  // Auto-detect country by IP
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("https://ipapi.co/json/");
-        const data = await res.json();
-
-        if (data.country_calling_code) {
-          setCountryCode(data.country_calling_code);
-        }
-      } catch (err) {
-        console.error("Country auto-detect failed, using +91");
-      }
-    })();
-  }, []);
-
   const backendUrl =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-
-  // Validate phone
-  const validatePhone = (rawValue) => {
-    const onlyNumbers = rawValue.replace(/\D/g, "");
-
-    if (onlyNumbers.length === 10) {
-      setPhoneError(false);
-    } else {
-      setPhoneError(true);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const onlyDigits = phone.replace(/\D/g, "");
-
-    if (!name || !email || !message || onlyDigits.length !== 10) {
+    if (!name || !email || !phone || !message) {
       setModal({
         open: true,
         type: "error",
-        text: "Please fill all fields correctly before sending.",
+        text: "Please fill all fields (name, email, phone, message) before sending.",
       });
       return;
     }
@@ -80,20 +112,21 @@ export default function Contact() {
           text:
             "Your message has been sent successfully. I’ll get back to you soon! 🚀",
         });
-
         setName("");
         setEmail("");
         setPhone("");
         setMessage("");
+        setCountryCode("+91");
       } else {
         throw new Error(res.data.error || "Failed to send");
       }
     } catch (err) {
+      console.error(err);
       setStatus("error");
       setModal({
         open: true,
         type: "error",
-        text: "Failed to send your message. Please try again later.",
+        text: "Failed to send your message. Please try again after a moment.",
       });
     }
   };
@@ -110,82 +143,61 @@ export default function Contact() {
 
       <div className="contact-card glass">
         <form onSubmit={handleSubmit}>
-          {/* NAME */}
           <div className="field">
             <label>Your name</label>
             <input
               type="text"
               placeholder="John Doe"
               value={name}
-              className={!name ? "error-border" : ""}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
-          {/* EMAIL */}
           <div className="field">
             <label>Email address</label>
             <input
               type="email"
               placeholder="you@example.com"
               value={email}
-              className={!email ? "error-border" : ""}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          {/* PHONE */}
+          {/* 🌍 Phone with country code */}
           <div className="field">
             <label>Phone number</label>
-
             <div className="phone-row">
               <select
                 className="phone-code"
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
               >
-                <option value={countryCode}>{countryCode}</option>
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.code + c.label} value={c.code}>
+                    {c.label} {c.code}
+                  </option>
+                ))}
               </select>
-
-              <div className="tooltip-wrapper">
-                <input
-                  type="tel"
-                  className={`phone-input ${phoneError ? "error-border" : ""}`}
-                  placeholder="+91 98765 43210"
-                  value={phone}
-                  onChange={(e) => {
-                    let value = e.target.value.replace(/\D/g, "");
-                    value = value.slice(0, 10);
-
-                    if (value.length > 5) {
-                      value = value.slice(0, 5) + " " + value.slice(5);
-                    }
-
-                    validatePhone(value);
-                    setPhone(value);
-                  }}
-                />
-
-                {phoneError && (
-                  <span className="tooltip">Enter a valid 10-digit number</span>
-                )}
-              </div>
+              <input
+                type="tel"
+                className="phone-input"
+                placeholder="98765 43210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* MESSAGE */}
           <div className="field">
             <label>Message</label>
             <textarea
               rows={4}
               placeholder="Tell me about the role, project, or idea…"
               value={message}
-              className={!message ? "error-border" : ""}
               onChange={(e) => setMessage(e.target.value)}
             />
           </div>
 
-          {/* SUBMIT */}
           <button
             type="submit"
             className="btn-primary contact-btn"
@@ -201,31 +213,39 @@ export default function Contact() {
           </button>
         </form>
 
-        {/* EXTRAS */}
         <div className="contact-extras">
           <p>Or mail me directly:</p>
           <div className="email-box">
             <span>inareshofficial@gmail.com</span>
             <button
               type="button"
-              onClick={() =>
-                navigator.clipboard?.writeText("inareshofficial@gmail.com")
-              }
+              onClick={() => {
+                navigator.clipboard?.writeText("inareshofficial@gmail.com");
+              }}
             >
               Copy
             </button>
           </div>
 
           <div className="social-row">
-            <a href="https://www.linkedin.com/in/singamnaresh" target="_blank">
+            <a
+              href="https://www.linkedin.com/in/singamnaresh"
+              target="_blank"
+              rel="noreferrer"
+            >
               LinkedIn
             </a>
-            <a href="https://github.com/nareshreddysingam" target="_blank">
+            <a
+              href="https://github.com/nareshreddysingam"
+              target="_blank"
+              rel="noreferrer"
+            >
               GitHub
             </a>
             <a
               href="https://leetcode.com/u/NareshSingam9515/"
               target="_blank"
+              rel="noreferrer"
             >
               LeetCode
             </a>
@@ -233,7 +253,7 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* Success / error modal */}
       {modal.open && (
         <div
           className="modal-backdrop"
