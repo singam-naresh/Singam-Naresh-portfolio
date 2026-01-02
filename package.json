@@ -2,17 +2,23 @@
   "name": "naresh-portfolio",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "description": "Naresh Singam's Portfolio - Full Stack Application",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm start",
+    "build:frontend": "cd frontend && npm run build",
+    "clean": "rm -rf node_modules frontend/node_modules backend/node_modules",
+    "clean:win": "rmdir /s /q node_modules frontend\\node_modules backend\\node_modules"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "your-repo-url-here"
   },
-  "devDependencies": {
-    "vite": "^5.0.0"
-  }
+  "author": "Naresh Singam",
+  "license": "MIT"
 }

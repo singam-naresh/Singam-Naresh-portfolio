@@ -7,21 +7,65 @@ import { promises as fs } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// ----- ENV SETUP -----
+/* ===============================
+   ENV + PATH SETUP
+================================ */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from the backend folder (works for PM2 + direct node)
+// Load backend/.env (works on local + Render)
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 const PORT = process.env.PORT || 4000;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
+/* ===============================
+   APP INIT
+================================ */
 const app = express();
-app.use(cors());
+
+/* ===============================
+   ✅ CORS FIX (VERY IMPORTANT)
+================================ */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://singam-naresh-portfolio.vercel.app",
+  "https://singam-naresh-portfolio.onrender.com",
+  // allow all preview deployments
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow server-to-server / curl / Postman
+      if (!origin) return callback(null, true);
+
+      // allow all vercel preview URLs
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS not allowed"));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
+    credentials: true,
+  })
+);
+
+// IMPORTANT: handle preflight
+app.options("*", cors());
+
 app.use(express.json());
 
-// ----- MESSAGE STORAGE (file based) -----
+/* ===============================
+   MESSAGE STORAGE (FILE BASED)
+================================ */
 const DATA_DIR = path.join(__dirname, "data");
 const MESSAGES_FILE = path.join(DATA_DIR, "messages.json");
 
@@ -40,27 +84,33 @@ async function writeMessages(messages) {
   await fs.writeFile(MESSAGES_FILE, JSON.stringify(messages, null, 2));
 }
 
-// ----- PUBLIC CONTACT ROUTE -----
+/* ===============================
+   PUBLIC CONTACT API
+================================ */
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
-    return res.status(400).json({ success: false, error: "All fields required" });
+    return res.status(400).json({
+      success: false,
+      error: "All fields required",
+    });
   }
 
   try {
-    // 1) Send email
+    // ---- EMAIL ----
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        pass: process.env.EMAIL_PASS, // Gmail App Password
       },
     });
 
     await transporter.sendMail({
-      from: email,
+      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
+      replyTo: email,
       subject: `Portfolio Message from ${name}`,
       text: `
 Name: ${name}
@@ -71,7 +121,7 @@ ${message}
       `,
     });
 
-    // 2) Save message to file for admin dashboard
+    // ---- SAVE MESSAGE ----
     const messages = await readMessages();
     const newMessage = {
       id: Date.now().toString(),
@@ -80,67 +130,97 @@ ${message}
       message,
       createdAt: new Date().toISOString(),
     };
+
     messages.push(newMessage);
     await writeMessages(messages);
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    console.log("Email error:", err);
-    res.json({ success: false, error: err.message });
+    console.error("Email error:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to send message",
+    });
   }
 });
 
-// ----- ADMIN AUTH MIDDLEWARE -----
+/* ===============================
+   ADMIN AUTH MIDDLEWARE
+================================ */
 function requireAdmin(req, res, next) {
   if (!ADMIN_SECRET) {
-    return res
-      .status(500)
-      .json({ success: false, error: "Admin not configured on server" });
+    return res.status(500).json({
+      success: false,
+      error: "Admin not configured on server",
+    });
   }
 
   const token = req.headers["x-admin-token"];
   if (!token || token !== ADMIN_SECRET) {
-    return res.status(401).json({ success: false, error: "Unauthorized" });
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized",
+    });
   }
 
   next();
 }
 
-// ----- ADMIN LOGIN ROUTE -----
+/* ===============================
+   ADMIN LOGIN
+================================ */
 app.post("/api/admin/login", (req, res) => {
   const { password } = req.body;
 
   if (!ADMIN_SECRET) {
-    return res
-      .status(500)
-      .json({ success: false, error: "Admin not configured" });
+    return res.status(500).json({
+      success: false,
+      error: "Admin not configured",
+    });
   }
 
   if (password === ADMIN_SECRET) {
-    // For simplicity we just echo back the same secret as token
-    return res.json({ success: true, token: ADMIN_SECRET });
+    return res.json({
+      success: true,
+      token: ADMIN_SECRET,
+    });
   }
 
-  return res
-    .status(401)
-    .json({ success: false, error: "Invalid admin password" });
+  return res.status(401).json({
+    success: false,
+    error: "Invalid admin password",
+  });
 });
 
-// ----- ADMIN MESSAGES ROUTE -----
+/* ===============================
+   ADMIN MESSAGES
+================================ */
 app.get("/api/admin/messages", requireAdmin, async (req, res) => {
   try {
     const messages = await readMessages();
-    // latest first
-    res.json({ success: true, messages: messages.reverse() });
+    res.json({
+      success: true,
+      messages: messages.reverse(),
+    });
   } catch (err) {
     console.error("Read messages error:", err);
-    res.status(500).json({ success: false, error: "Failed to load messages" });
+    res.status(500).json({
+      success: false,
+      error: "Failed to load messages",
+    });
   }
 });
 
-// (optional) delete one message in future
-// app.delete("/api/admin/messages/:id", requireAdmin, async (req, res) => { ... });
+/* ===============================
+   HEALTH CHECK (OPTIONAL)
+================================ */
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
 
-app.listen(PORT, () =>
-  console.log("🚀 Backend running on port " + PORT)
-);
+/* ===============================
+   START SERVER
+================================ */
+app.listen(PORT, () => {
+  console.log("🚀 Backend running on port " + PORT);
+});
