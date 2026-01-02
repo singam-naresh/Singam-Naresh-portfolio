@@ -67,13 +67,5 @@ export default function Navbar() {
         </nav>
       </div>
     </header>
-    
   );
-  
 }
-<button
-  className={`nav-link ${location.pathname === "/blog" ? "active" : ""}`}
-  onClick={() => navigate("/blog")}
->
-  Blog
-</button>

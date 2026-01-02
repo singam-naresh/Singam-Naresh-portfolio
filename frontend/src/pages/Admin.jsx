@@ -21,8 +21,7 @@ export default function AdminPage() {
       setIsAuth(true);
       fetchMessages(token);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
   async function handleLogin(e) {
     e.preventDefault();

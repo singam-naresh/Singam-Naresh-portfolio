@@ -74,7 +74,7 @@ export default function Home() {
 
           <div className="hero-image-ring">
             <img
-              src="https://media.licdn.com/dms/image/v2/D5603AQHjWNqBgm0RSA/profile-displayphoto-scale_400_400/B56Zo.lAGmJkAg-/0/1761986479409?e=1766016000&v=beta&t=scCtH-9pZVQeiJq94zADhWsTZvtHc9dgY3GvvQYQP2g"
+              src="https://media.licdn.com/dms/image/v2/D5603AQFR2UuzNUzgYg/profile-displayphoto-scale_400_400/B56ZsSVvvRG4Ag-/0/1765539252067?e=1769040000&v=beta&t=WiUKltwgIaIdW1PCH2_xyJoZ9PKtopvCLb7ZUDhimvo"
               alt="Naresh profile"
               className="hero-image"
             />

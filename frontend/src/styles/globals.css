@@ -378,6 +378,7 @@ textarea.input {
   filter: blur(60px);
   opacity: 0.35;
   animation: float-slow 22s ease-in-out infinite;
+  will-change: transform;
 }
 
 .orb-1 {
