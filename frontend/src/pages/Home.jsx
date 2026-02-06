@@ -54,7 +54,7 @@ export default function Home() {
               Hire / Collaborate
             </a>
             <a
-              href="/assets/Singam_Naresh_Resume.pdf"
+              href="/assets/Singam_Naresh_Full_Stack_Developer_Resume.pdf"
               className="btn-secondary"
               download
             >
@@ -74,7 +74,7 @@ export default function Home() {
 
           <div className="hero-image-ring">
             <img
-              src="https://media.licdn.com/dms/image/v2/D5603AQFR2UuzNUzgYg/profile-displayphoto-scale_400_400/B56ZsSVvvRG4Ag-/0/1765539252067?e=1769040000&v=beta&t=WiUKltwgIaIdW1PCH2_xyJoZ9PKtopvCLb7ZUDhimvo"
+              src="/assets/NareshProfile.png"
               alt="Naresh profile"
               className="hero-image"
             />
