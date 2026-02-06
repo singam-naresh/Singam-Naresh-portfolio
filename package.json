@@ -4,11 +4,15 @@
   "version": "1.0.0",
   "description": "Naresh Singam's Portfolio - Full Stack Application",
   "scripts": {
-    "install:frontend": "cd frontend && npm install --legacy-peer-deps",
+    "install:frontend": "cd frontend && npm install --legacy-peer-deps --omit=optional",
     "build:frontend": "cd frontend && npm run build",
     "install:backend": "cd backend && npm install",
     "build": "npm run install:frontend && npm run build:frontend && npm run install:backend",
-    "start": "cd backend && npm start"
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix backend run start\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
   },
   "repository": {
     "type": "git",
